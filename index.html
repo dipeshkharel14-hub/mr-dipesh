@@ -24,11 +24,11 @@
             display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,255,0,0.1); 
             min-width: 280px; z-index: 10;
         }
-        .header { background: var(--neon); color: #000; padding: 6px 12px; cursor: move; font-weight: bold; font-size: 0.75rem; display: flex; justify-content: space-between; }
+        .header { background: var(--neon); color: #000; padding: 6px 12px; cursor: move; font-weight: bold; font-size: 0.75rem; display: flex; justify-content: space-between; user-select: none; }
         .content { padding: 15px; flex-grow: 1; overflow-y: auto; font-size: 0.85rem; }
 
         /* Form UI */
-        input { background: #001a00; border: 1px solid var(--neon); color: var(--neon); width: 92%; padding: 7px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; }
+        input { background: #001a00; border: 1px solid var(--neon); color: var(--neon); width: 92%; padding: 7px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; outline: none; }
         button { background: var(--neon); color: #000; border: none; width: 100%; padding: 10px; font-weight: bold; cursor: pointer; margin-top: 5px; }
         button:hover { background: #fff; box-shadow: 0 0 15px #fff; }
         
@@ -62,7 +62,7 @@
             <button onclick="runDiagnostic()">EXECUTE SEARCH</button>
         </div>
         <div id="result-view" style="display:none;">
-            <img id="p-img" src="">
+            <img id="p-img" src="" alt="Target Photo">
             <div id="p-details"></div>
             <button onclick="resetSearch()" style="background: #333; color: #0f0;">NEW SEARCH</button>
         </div>
@@ -93,18 +93,17 @@
 </div>
 
 <script>
-    // --- DATABASE: Hardcode your GitHub image paths here ---
     const DB = [
         { 
             name: "Chandan Jaiswal", coll: "Cosmic international academy", 
             grad: "11", sect: "bio-M",
-            image: "chandan.jpg", // Make sure this file is in your GitHub repo
+            image: "chandan.jpg",
             extra: "Status: Active | Node: Grade 11 Lab" 
         },
         { 
             name: "Bisuddha Adhikari", coll: "cosmic international academy", 
             grad: "11", sect: "bio-M",
-            image: "bisuddha.jpg", // Make sure this file is in your GitHub repo
+            image: "bisuddha.jpg",
             extra: "Father: Maheshwor (UN Peacekeeping) | Mother: Laxmi | Sister: Jigyasha" 
         }
     ];
@@ -145,7 +144,6 @@
         document.getElementById('result-view').style.display = 'none';
     }
 
-    // --- VISUAL EFFECTS ---
     // Matrix Rain
     const canvas = document.getElementById('m-canvas');
     const ctx = canvas.getContext('2d');
@@ -162,7 +160,7 @@
     }
     setInterval(draw, 50);
 
-    // Auto-Typing Simulation
+    // Auto-Typing
     const codeSnippet = "BYPASSING_BIO_M_RECORDS...\nACCESSING_COSMIC_SERVER...\nDECRYPTING_TARGET_METADATA...\n";
     let ci = 0;
     document.onkeydown = () => {
@@ -177,7 +175,7 @@
     setInterval(() => {
         const log = document.getElementById('traffic-log');
         log.innerHTML += `> Ping 192.168.1.${Math.floor(Math.random()*255)}: OK<br>`;
-        if(log.innerHTML.length > 300) log.innerHTML = "";
+        if(log.innerHTML.length > 500) log.innerHTML = "";
         log.scrollTop = log.scrollHeight;
     }, 2500);
 
