@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURE_ROOT_ACCESS</title>
+    <style>
+        :root { --neon: #00FF00; --bg: #000; --err: #FF0000; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+        #canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
+
+        .window {
+            position: absolute; background: rgba(0, 15, 0, 0.95); border: 1px solid var(--neon);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.15); min-width: 320px; z-index: 10;
+        }
+        .header { background: var(--neon); color: #000; padding: 6px; cursor: move; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; }
+        .content { padding: 15px; max-height: 400px; overflow-y: auto; }
+
+        /* Form Styling */
+        input, select { background: #001100; border: 1px solid var(--neon); color: var(--neon); width: 93%; margin: 8px 0; padding: 8px; font-family: inherit; }
+        button { background: var(--neon); color: #000; border: none; width: 100%; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+
+        /* Target View */
+        #result { display: none; border-top: 2px dashed var(--neon); margin-top: 15px; padding-top: 15px; }
+        .profile-img { width: 100%; max-height: 200px; border: 1px solid var(--neon); object-fit: cover; margin-bottom: 10px; }
+        .meta-tag { color: #888; font-size: 0.7rem; text-transform: uppercase; }
+        .meta-val { color: #fff; margin-bottom: 8px; font-size: 0.9rem; }
+
+        /* Error Overlay */
+        #lockdown {
+            display: none; position: fixed; inset: 0; background: rgba(150, 0, 0, 0.9);
+            z-index: 1000; text-align: center; padding-top: 20vh; animation: glitch 0.2s infinite;
+        }
+        @keyframes glitch { 0% { transform: translate(0); } 50% { transform: translate(-5px, 5px); } 100% { transform: translate(5px, -5px); } }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="lockdown"><h1>ACCESS DENIED</h1><p>WRONG FINGERPRINT / UNAUTHORIZED USER</p></div>
+
+<div class="window" style="top:20px; left:20px; width:450px;">
+    <div class="header">SYS_LOG :: INTERCEPTOR</div>
+    <div class="content" id="term-out" style="font-size: 0.8rem; color: #0f0;">Press keys to bypass firewall...</div>
+</div>
+
+<div class="window" style="top:50px; right:50px; width:380px;">
+    <div class="header">TARGET_INTEL_V2</div>
+    <div class="content">
+        <div id="search-ui">
+            <label class="meta-tag">Upload Target Decoy (Optional):</label>
+            <input type="file" id="img-upload" accept="image/*" style="font-size: 0.7rem;">
+            
+            <input type="text" id="name-in" placeholder="FULL NAME">
+            <input type="text" id="coll-in" placeholder="COLLEGE">
+            <input type="text" id="grad-in" placeholder="GRADE">
+            <input type="text" id="sect-in" placeholder="SECTION">
+            <button onclick="runDiagnostic()">QUERY DATABASE</button>
+        </div>
+
+        <div id="result">
+            <img id="p-img" class="profile-img" src="">
+            <div id="p-details"></div>
+            <button onclick="location.reload()" style="background: #555; color: white;">NEW QUERY</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Database Object
+    const DB = [
+        {
+            name: "Chandan Jaiswal",
+            college: "Cosmic International Academy",
+            grade: "11",
+            section: "Bio-M",
+            extra: {
+                "Threat_Level": "High",
+                "Specialization": "Biological Data",
+                "Last_Seen": "Grade 11 Lab"
+            }
+        },
+        {
+            name: "Bisuddha Adhikari",
+            college: "Cosmic International Academy",
+            grade: "11",
+            section: "Bio-M",
+            extra: {
+                "Threat_Level": "Moderate",
+                "Network_Status": "Encrypted",
+                "Known_Associates": "Chandan J., Dipesh K."
+            }
+        }
+    ];
+
+    let uploadedImgData = "";
+
+    // Handle Image Upload locally
+    document.getElementById('img-upload').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function() { uploadedImgData = reader.result; };
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    function runDiagnostic() {
+        const name = document.getElementById('name-in').value.trim();
+        const person = DB.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+        if(person) {
+            document.getElementById('search-ui').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            
+            // Set image: Use uploaded one if exists, otherwise placeholder
+            document.getElementById('p-img').src = uploadedImgData || "https://via.placeholder.com/300/003300/00FF00?text=NO_IMAGE_FOUND";
+            
+            let html = `
+                <div class="meta-tag">Identity Confirmed</div>
+                <div class="meta-val" style="color:var(--neon); font-size:1.2rem;">${person.name}</div>
+                <div class="meta-tag">Academic Routing</div>
+                <div class="meta-val">${person.college} | ${person.grade}-${person.section}</div>
+                <div class="meta-tag">Additional Metadata</div>
+            `;
+            
+            // Loop through extra fields for easy future expansion
+            for(let key in person.extra) {
+                html += `<div class="meta-val">> ${key}: ${person.extra[key]}</div>`;
+            }
+            
+            document.getElementById('p-details').innerHTML = html;
+        } else {
+            const lock = document.getElementById('lockdown');
+            lock.style.display = 'block';
+            setTimeout(() => lock.style.display = 'none', 3000);
+        }
+    }
+
+    // --- Matrix Rain & Draggable logic remains similar to previous version ---
+    // (Included in full index.html for your GitHub upload)
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const drops = Array(Math.floor(canvas.width/16)).fill(1);
+    function matrix() {
+        ctx.fillStyle = "rgba(0,0,0,0.07)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "#0f0"; drops.forEach((y, i) => {
+            ctx.fillText(Math.floor(Math.random()*2), i*16, y*16);
+            if(y*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        });
+    }
+    setInterval(matrix, 50);
+
+    // Typing Simulation
+    const codeSnippet = "CRITICAL_FAILURE... BYPASSING... ACCESSING_BIO_M_RECORDS... \n> GET /students/grade11/cosmic_intl \n> STATUS: 200 OK \n> DECRYPTING_IDENTITY...";
+    let charI = 0;
+    document.addEventListener('keydown', () => {
+        const out = document.getElementById('term-out');
+        if(charI == 0) out.innerText = "";
+        out.innerText += codeSnippet[charI % codeSnippet.length];
+        charI++;
+    });
+
+    // Draggable Window logic
+    document.querySelectorAll('.header').forEach(h => {
+        h.onmousedown = (e) => {
+            let w = h.parentElement;
+            let ox = e.clientX - w.offsetLeft, oy = e.clientY - w.offsetTop;
+            document.onmousemove = (e) => { w.style.left = e.clientX - ox + 'px'; w.style.top = e.clientY - oy + 'px'; };
+            document.onmouseup = () => document.onmousemove = null;
+        };
+    });
+</script>
+</body>
+</html>
