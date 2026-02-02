@@ -3,165 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SECURE_ROOT_ACCESS</title>
+    <title>CENTRAL_COMMAND_COSMIC</title>
     <style>
-        :root { --neon: #00FF00; --bg: #000; --err: #FF0000; }
+        :root { --neon: #00FF00; --bg: #000; --dim-neon: rgba(0, 255, 0, 0.2); }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
-        #canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.4; }
-
-        .window {
-            position: absolute; background: rgba(0, 15, 0, 0.95); border: 1px solid var(--neon);
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.15); min-width: 320px; z-index: 10;
+        
+        /* Background Animations */
+        #canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+        .grid-bg {
+            position: fixed; top: 0; left: 0; width: 200%; height: 200%;
+            background-image: linear-gradient(var(--dim-neon) 1px, transparent 1px), 
+                              linear-gradient(90deg, var(--dim-neon) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            animation: moveGrid 10s linear infinite;
+            z-index: -2;
         }
-        .header { background: var(--neon); color: #000; padding: 6px; cursor: move; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; }
-        .content { padding: 15px; max-height: 400px; overflow-y: auto; }
+        @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
 
-        /* Form Styling */
-        input, select { background: #001100; border: 1px solid var(--neon); color: var(--neon); width: 93%; margin: 8px 0; padding: 8px; font-family: inherit; }
-        button { background: var(--neon); color: #000; border: none; width: 100%; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        /* Window System */
+        .window {
+            position: absolute; background: rgba(0, 10, 0, 0.9); border: 1px solid var(--neon);
+            box-shadow: 0 0 15px var(--dim-neon); z-index: 10; display: flex; flex-direction: column;
+        }
+        .header { background: var(--neon); color: #000; padding: 5px 10px; cursor: move; font-weight: bold; font-size: 0.75rem; display: flex; justify-content: space-between; }
+        .content { padding: 12px; overflow-y: auto; font-size: 0.85rem; }
 
-        /* Target View */
-        #result { display: none; border-top: 2px dashed var(--neon); margin-top: 15px; padding-top: 15px; }
-        .profile-img { width: 100%; max-height: 200px; border: 1px solid var(--neon); object-fit: cover; margin-bottom: 10px; }
-        .meta-tag { color: #888; font-size: 0.7rem; text-transform: uppercase; }
-        .meta-val { color: #fff; margin-bottom: 8px; font-size: 0.9rem; }
-
+        /* Custom Elements */
+        input, button { background: #001a00; border: 1px solid var(--neon); color: var(--neon); padding: 8px; margin: 5px 0; width: 90%; font-family: inherit; }
+        button { cursor: pointer; font-weight: bold; }
+        button:hover { background: var(--neon); color: #000; }
+        .stat-bar { height: 10px; background: #003300; margin: 5px 0; border: 1px solid var(--neon); position: relative; }
+        .stat-fill { height: 100%; background: var(--neon); width: 45%; transition: width 0.5s; }
+        
         /* Error Overlay */
         #lockdown {
-            display: none; position: fixed; inset: 0; background: rgba(150, 0, 0, 0.9);
-            z-index: 1000; text-align: center; padding-top: 20vh; animation: glitch 0.2s infinite;
+            display: none; position: fixed; inset: 0; background: rgba(180, 0, 0, 0.9);
+            z-index: 1000; text-align: center; padding-top: 20vh; animation: shake 0.1s infinite;
         }
-        @keyframes glitch { 0% { transform: translate(0); } 50% { transform: translate(-5px, 5px); } 100% { transform: translate(5px, -5px); } }
+        @keyframes shake { 0% { margin-left: 0; } 25% { margin-left: 5px; } 50% { margin-left: 0; } 75% { margin-left: -5px; } 100% { margin-left: 0; } }
+        
+        #p-img { width: 100%; max-height: 180px; border: 1px solid var(--neon); margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
+<div class="grid-bg"></div>
 <canvas id="canvas"></canvas>
-<div id="lockdown"><h1>ACCESS DENIED</h1><p>WRONG FINGERPRINT / UNAUTHORIZED USER</p></div>
+<div id="lockdown"><h1>!!! SECURITY BREACH !!!</h1><p>TRACE DETECTED: DISCONNECT IMMEDIATELY</p></div>
 
-<div class="window" style="top:20px; left:20px; width:450px;">
-    <div class="header">SYS_LOG :: INTERCEPTOR</div>
-    <div class="content" id="term-out" style="font-size: 0.8rem; color: #0f0;">Press keys to bypass firewall...</div>
+<div class="window" style="top: 50px; left: 450px; width: 350px;">
+    <div class="header"><span>[TARGET_SEARCH_v4]</span></div>
+    <div class="content">
+        <input type="file" id="img-upload" accept="image/*" style="font-size: 0.6rem;">
+        <input type="text" id="name-in" placeholder="Enter Target Name...">
+        <button onclick="runDiagnostic()">EXECUTE DEEP SCAN</button>
+        <div id="result-box">
+            <img id="p-img" src="">
+            <div id="p-details" style="margin-top:10px;"></div>
+        </div>
+    </div>
 </div>
 
-<div class="window" style="top:50px; right:50px; width:380px;">
-    <div class="header">TARGET_INTEL_V2</div>
-    <div class="content">
-        <div id="search-ui">
-            <label class="meta-tag">Upload Target Decoy (Optional):</label>
-            <input type="file" id="img-upload" accept="image/*" style="font-size: 0.7rem;">
-            
-            <input type="text" id="name-in" placeholder="FULL NAME">
-            <input type="text" id="coll-in" placeholder="COLLEGE">
-            <input type="text" id="grad-in" placeholder="GRADE">
-            <input type="text" id="sect-in" placeholder="SECTION">
-            <button onclick="runDiagnostic()">QUERY DATABASE</button>
-        </div>
+<div class="window" style="top: 20px; left: 20px; width: 400px; height: 250px;">
+    <div class="header"><span>[ROOT_DECRYPTOR]</span></div>
+    <div class="content" id="term-out" style="color: #0f0; white-space: pre-wrap;">Press keys to inject packets...</div>
+</div>
 
-        <div id="result">
-            <img id="p-img" class="profile-img" src="">
-            <div id="p-details"></div>
-            <button onclick="location.reload()" style="background: #555; color: white;">NEW QUERY</button>
+<div class="window" style="bottom: 50px; left: 20px; width: 380px;">
+    <div class="header"><span>[LIVE_TRAFFIC_INTERCEPT]</span></div>
+    <div class="content" id="traffic-log" style="font-size: 0.7rem; color: #0a0;">
+        > Initializing sniffer...<br>
+        > Listening on Port 8080...<br>
+    </div>
+</div>
+
+<div class="window" style="top: 150px; right: 50px; width: 280px;">
+    <div class="header"><span>[HOST_RESOURCES]</span></div>
+    <div class="content">
+        CPU USAGE <div class="stat-bar"><div class="stat-fill" style="width: 78%;"></div></div>
+        UPLINK STABILITY <div class="stat-bar"><div class="stat-fill" style="width: 92%; background: cyan;"></div></div>
+        BIO-SCAN STATUS: <span style="color: yellow;">READY</span><br><br>
+        <div style="font-size: 0.7rem;">
+            LOCATION: 27.7172° N, 85.3240° E<br>
+            NODE: Cosmic_Intl_Grade11
         </div>
     </div>
 </div>
 
 <script>
-    // Database Object
+    // --- DATABASE ---
     const DB = [
-        {
-            name: "Chandan Jaiswal",
-            college: "Cosmic International Academy",
-            grade: "11",
-            section: "Bio-M",
-            extra: {
-                "Threat_Level": "High",
-                "Specialization": "Biological Data",
-                "Last_Seen": "Grade 11 Lab"
-            }
-        },
-        {
-            name: "Bisuddha Adhikari",
-            college: "Cosmic International Academy",
-            grade: "11",
-            section: "Bio-M",
-            extra: {
-                "Threat_Level": "Moderate",
-                "Network_Status": "Encrypted",
-                "Known_Associates": "Chandan J., Dipesh K."
-            }
-        }
+        { name: "Chandan Jaiswal", coll: "Cosmic International Academy", gr: "11", sec: "Bio-M", extra: "Status: Active Monitor" },
+        { name: "Bisuddha Adhikari", coll: "Cosmic International Academy", gr: "11", sec: "Bio-M", extra: "Status: Encrypted Node" }
     ];
 
-    let uploadedImgData = "";
-
-    // Handle Image Upload locally
-    document.getElementById('img-upload').addEventListener('change', function(e) {
-        const reader = new FileReader();
-        reader.onload = function() { uploadedImgData = reader.result; };
-        reader.readAsDataURL(e.target.files[0]);
-    });
+    let uploadedImg = "";
+    document.getElementById('img-upload').onchange = (e) => {
+        const r = new FileReader();
+        r.onload = () => { uploadedImg = r.result; };
+        r.readAsDataURL(e.target.files[0]);
+    };
 
     function runDiagnostic() {
-        const name = document.getElementById('name-in').value.trim();
-        const person = DB.find(p => p.name.toLowerCase() === name.toLowerCase());
-
-        if(person) {
-            document.getElementById('search-ui').style.display = 'none';
-            document.getElementById('result').style.display = 'block';
-            
-            // Set image: Use uploaded one if exists, otherwise placeholder
-            document.getElementById('p-img').src = uploadedImgData || "https://via.placeholder.com/300/003300/00FF00?text=NO_IMAGE_FOUND";
-            
-            let html = `
-                <div class="meta-tag">Identity Confirmed</div>
-                <div class="meta-val" style="color:var(--neon); font-size:1.2rem;">${person.name}</div>
-                <div class="meta-tag">Academic Routing</div>
-                <div class="meta-val">${person.college} | ${person.grade}-${person.section}</div>
-                <div class="meta-tag">Additional Metadata</div>
+        const val = document.getElementById('name-in').value.trim().toLowerCase();
+        const p = DB.find(x => x.name.toLowerCase() === val);
+        const imgEl = document.getElementById('p-img');
+        
+        if(p) {
+            imgEl.src = uploadedImg || "https://via.placeholder.com/200/002200/00FF00?text=DATA_FOUND";
+            imgEl.style.display = "block";
+            document.getElementById('p-details').innerHTML = `
+                <b>NAME:</b> ${p.name}<br>
+                <b>ACADEMY:</b> ${p.coll}<br>
+                <b>CLASS:</b> ${p.gr}-${p.sec}<br>
+                <span style="color:yellow">${p.extra}</span>
             `;
-            
-            // Loop through extra fields for easy future expansion
-            for(let key in person.extra) {
-                html += `<div class="meta-val">> ${key}: ${person.extra[key]}</div>`;
-            }
-            
-            document.getElementById('p-details').innerHTML = html;
         } else {
-            const lock = document.getElementById('lockdown');
-            lock.style.display = 'block';
-            setTimeout(() => lock.style.display = 'none', 3000);
+            document.getElementById('lockdown').style.display = "block";
+            setTimeout(() => { document.getElementById('lockdown').style.display = "none"; }, 2500);
         }
     }
 
-    // --- Matrix Rain & Draggable logic remains similar to previous version ---
-    // (Included in full index.html for your GitHub upload)
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const drops = Array(Math.floor(canvas.width/16)).fill(1);
-    function matrix() {
-        ctx.fillStyle = "rgba(0,0,0,0.07)"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "#0f0"; drops.forEach((y, i) => {
-            ctx.fillText(Math.floor(Math.random()*2), i*16, y*16);
-            if(y*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    // --- AUTOMATION ---
+    // Matrix Rain
+    const c = document.getElementById('canvas');
+    const ctx = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const drops = Array(Math.floor(c.width/18)).fill(1);
+    setInterval(() => {
+        ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,c.width,c.height);
+        ctx.fillStyle = "#0f0"; ctx.font = "15px monospace";
+        drops.forEach((y, i) => {
+            ctx.fillText(Math.random() > 0.5 ? "1" : "0", i*18, y*18);
+            if(y*18 > c.height && Math.random() > 0.98) drops[i] = 0;
             drops[i]++;
         });
-    }
-    setInterval(matrix, 50);
+    }, 50);
 
-    // Typing Simulation
-    const codeSnippet = "CRITICAL_FAILURE... BYPASSING... ACCESSING_BIO_M_RECORDS... \n> GET /students/grade11/cosmic_intl \n> STATUS: 200 OK \n> DECRYPTING_IDENTITY...";
-    let charI = 0;
-    document.addEventListener('keydown', () => {
+    // Typing Logic
+    const code = "BYPASS_CORE_FIREWALL...\nAUTHORIZING_BIOMETRICS...\nFETCHING_GRADE11_LIST...\nSUCCESS: CONNECTION_ESTABLISHED\n";
+    let ci = 0;
+    document.onkeydown = () => {
         const out = document.getElementById('term-out');
-        if(charI == 0) out.innerText = "";
-        out.innerText += codeSnippet[charI % codeSnippet.length];
-        charI++;
-    });
+        if(ci === 0) out.innerHTML = "";
+        out.innerHTML += code[ci % code.length];
+        ci++;
+        out.scrollTop = out.scrollHeight;
+    };
 
-    // Draggable Window logic
+    // Fake Traffic Log
+    setInterval(() => {
+        const log = document.getElementById('traffic-log');
+        const ips = ["192.168.1.1", "10.0.0.5", "172.16.0.22", "8.8.8.8"];
+        const msg = ["> Handshake successful", "> Packet intercepted", "> Encryption: AES-256", "> Ping 22ms"];
+        log.innerHTML += `> ${ips[Math.floor(Math.random()*4)]} ${msg[Math.floor(Math.random()*4)]}<br>`;
+        if(log.innerHTML.length > 500) log.innerHTML = "> Refreshing Stream...<br>";
+        log.scrollTop = log.scrollHeight;
+    }, 2000);
+
+    // Draggable Logic
     document.querySelectorAll('.header').forEach(h => {
         h.onmousedown = (e) => {
             let w = h.parentElement;
