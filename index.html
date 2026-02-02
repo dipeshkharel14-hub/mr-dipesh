@@ -107,26 +107,29 @@
             extra: "Father: Maheshwor (UN Peacekeeping) | Mother: Laxmi | Sister: Jigyasha" 
         }
     ];
-
     function runDiagnostic() {
-        const n = document.getElementById('in-name').value.trim();
-        const c = document.getElementById('in-coll').value.trim();
+        const n = document.getElementById('in-name').value.trim().toLowerCase();
+        const c = document.getElementById('in-coll').value.trim().toLowerCase();
         const g = document.getElementById('in-grad').value.trim();
-        const s = document.getElementById('in-sect').value.trim();
+        const s = document.getElementById('in-sect').value.trim().toLowerCase();
 
         const p = DB.find(x => 
-            x.name.toLowerCase() === n.toLowerCase() && 
-            x.coll.toLowerCase() === c.toLowerCase() &&
+            x.name.toLowerCase() === n && 
             x.grad === g && 
-            x.sect.toLowerCase() === s.toLowerCase()
+            x.sect.toLowerCase() === s
         );
 
         if(p) {
             document.getElementById('search-ui').style.display = 'none';
             document.getElementById('result-view').style.display = 'block';
             const imgEl = document.getElementById('p-img');
-            imgEl.src = p.image;
+            
+            // This pulls the image directly from your repository's public address
+            const repoPath = "https://raw.githubusercontent.com/dipeshkharel14-hub/mr-dipesh/main/";
+            imgEl.src = repoPath + p.image; 
+            
             imgEl.style.display = "block";
+
             document.getElementById('p-details').innerHTML = `
                 <div class="intel-line"><b>NAME:</b> ${p.name}</div>
                 <div class="intel-line"><b>INSTITUTE:</b> ${p.coll}</div>
@@ -138,6 +141,9 @@
             setTimeout(() => { lock.style.display = "none"; }, 3000);
         }
     }
+
+    
+    
 
     function resetSearch() {
         document.getElementById('search-ui').style.display = 'block';
