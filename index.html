@@ -95,7 +95,63 @@
     // --- DATABASE ---
     const DB = [
         { name: "Chandan Jaiswal", coll: "Cosmic International Academy", gr: "11", sec: "Bio-M", extra: "Status: Active Monitor" },
-        { name: "Bisuddha Adhikari", coll: "Cosmic International Academy", gr: "11", sec: "Bio-M", extra: "Status: Encrypted Node" }
+        // Enhanced Database Object
+        { 
+            name: "Chandan Jaiswal", 
+            coll: "Cosmic International Academy", 
+            gr: "11", 
+            sec: "Bio-M", 
+            details: "ID: 992-X | Status: Active",
+            family: {
+                "Note": "Data expansion required for this target."
+            }
+        },
+        { 
+            name: "Bisuddha Adhikari", 
+            coll: "Cosmic International Academy", 
+            gr: "11", 
+            sec: "Bio-M", 
+            details: "ID: 441-Y | Status: Stealth",
+            family: {
+                "Sister": "Jigyasha Adhikari",
+                "Mother": "Laxmi Ghimire",
+                "Father": "Maheshwor Adhikari",
+                "Patrilineal_Record": "UN Peacekeeping Service (Maheshwor A.)"
+            }
+        }
+    ];
+
+    function runScan() {
+        const name = document.getElementById('name-in').value.trim().toLowerCase();
+        const p = DB.find(x => x.name.toLowerCase() === name);
+        const img = document.getElementById('p-img');
+        const detailsBox = document.getElementById('p-details');
+        
+        if(p) {
+            img.src = uploadedImg || "https://via.placeholder.com/200/002200/00FF00?text=DATA_LOCKED";
+            img.style.display = "block";
+            
+            // Build the basic profile
+            let html = `
+                <span style="color:white">NAME:</span> ${p.name}<br>
+                <span style="color:white">INSTITUTE:</span> ${p.coll}<br>
+                <span style="color:white">CLASS:</span> ${p.gr}-${p.sec}<br>
+                <hr style="border:0; border-top:1px solid var(--dim);">
+                <span style="color:yellow; font-weight:bold;">[FAMILY_RECORDS]</span><br>
+            `;
+
+            // Loop through family details dynamically
+            for (let [key, value] of Object.entries(p.family)) {
+                html += `<span style="font-size:0.75rem;">> ${key.replace('_', ' ')}: ${value}</span><br>`;
+            }
+            
+            detailsBox.innerHTML = html;
+        } else {
+            const lock = document.getElementById('lockdown');
+            lock.style.display = "block";
+            setTimeout(() => { lock.style.display = "none"; }, 3000);
+        }
+    }
     ];
 
     let uploadedImg = "";
