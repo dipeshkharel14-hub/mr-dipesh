@@ -3,227 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTRAL_COMMAND_COSMIC</title>
+    <title>SECURE_COMMAND_CENTER</title>
     <style>
-        :root { --neon: #00FF00; --bg: #000; --dim-neon: rgba(0, 255, 0, 0.2); }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
-        
-        /* Background Animations */
-        #canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
-        .grid-bg {
-            position: fixed; top: 0; left: 0; width: 200%; height: 200%;
-            background-image: linear-gradient(var(--dim-neon) 1px, transparent 1px), 
-                              linear-gradient(90deg, var(--dim-neon) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg);
-            animation: moveGrid 10s linear infinite;
-            z-index: -2;
-        }
-        @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(50px); } }
+        :root { --neon: #00FF00; --bg: #000; --dim: rgba(0, 255, 0, 0.15); }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; height: 100vh; overflow: hidden; }
 
-        /* Window System */
-        .window {
-            position: absolute; background: rgba(0, 10, 0, 0.9); border: 1px solid var(--neon);
-            box-shadow: 0 0 15px var(--dim-neon); z-index: 10; display: flex; flex-direction: column;
+        /* Matrix & Grid Background */
+        #m-canvas { position: fixed; inset: 0; z-index: -2; opacity: 0.3; }
+        .grid-floor {
+            position: fixed; width: 200%; height: 200%; top: -50%; left: -50%;
+            background-image: linear-gradient(var(--dim) 1px, transparent 1px), linear-gradient(90deg, var(--dim) 1px, transparent 1px);
+            background-size: 45px 45px; transform: perspective(500px) rotateX(60deg);
+            animation: moveGrid 10s linear infinite; z-index: -1;
         }
-        .header { background: var(--neon); color: #000; padding: 5px 10px; cursor: move; font-weight: bold; font-size: 0.75rem; display: flex; justify-content: space-between; }
-        .content { padding: 12px; overflow-y: auto; font-size: 0.85rem; }
+        @keyframes moveGrid { from { transform: translateY(0); } to { transform: translateY(45px); } }
 
-        /* Custom Elements */
-        input, button { background: #001a00; border: 1px solid var(--neon); color: var(--neon); padding: 8px; margin: 5px 0; width: 90%; font-family: inherit; }
-        button { cursor: pointer; font-weight: bold; }
-        button:hover { background: var(--neon); color: #000; }
-        .stat-bar { height: 10px; background: #003300; margin: 5px 0; border: 1px solid var(--neon); position: relative; }
-        .stat-fill { height: 100%; background: var(--neon); width: 45%; transition: width 0.5s; }
+        /* Draggable Windows */
+        .window { 
+            position: absolute; background: rgba(0, 15, 0, 0.95); border: 1px solid var(--neon); 
+            display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,255,0,0.1); 
+            min-width: 280px; z-index: 10;
+        }
+        .header { background: var(--neon); color: #000; padding: 6px 12px; cursor: move; font-weight: bold; font-size: 0.75rem; display: flex; justify-content: space-between; }
+        .content { padding: 15px; flex-grow: 1; overflow-y: auto; font-size: 0.85rem; }
+
+        /* Form UI */
+        input { background: #001a00; border: 1px solid var(--neon); color: var(--neon); width: 92%; padding: 7px; margin-bottom: 8px; font-family: inherit; font-size: 0.8rem; }
+        button { background: var(--neon); color: #000; border: none; width: 100%; padding: 10px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        button:hover { background: #fff; box-shadow: 0 0 15px #fff; }
         
-        /* Error Overlay */
+        /* Result Layout */
+        #p-img { width: 100%; max-height: 200px; border: 1px solid var(--neon); margin: 10px 0; display: none; object-fit: cover; }
+        .intel-line { border-bottom: 1px solid var(--dim); padding: 4px 0; font-size: 0.75rem; }
+
+        /* Warning Overlay */
         #lockdown {
-            display: none; position: fixed; inset: 0; background: rgba(180, 0, 0, 0.9);
-            z-index: 1000; text-align: center; padding-top: 20vh; animation: shake 0.1s infinite;
+            display: none; position: fixed; inset: 0; background: rgba(200, 0, 0, 0.9);
+            z-index: 1000; text-align: center; padding-top: 25vh; font-size: 2rem; 
+            animation: warningBlink 0.2s infinite; color: white;
         }
-        @keyframes shake { 0% { margin-left: 0; } 25% { margin-left: 5px; } 50% { margin-left: 0; } 75% { margin-left: -5px; } 100% { margin-left: 0; } }
-        
-        #p-img { width: 100%; max-height: 180px; border: 1px solid var(--neon); margin-top: 10px; display: none; }
+        @keyframes warningBlink { 0% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-<div class="grid-bg"></div>
-<canvas id="canvas"></canvas>
-<div id="lockdown"><h1>!!! SECURITY BREACH !!!</h1><p>TRACE DETECTED: DISCONNECT IMMEDIATELY</p></div>
+<div class="grid-floor"></div>
+<canvas id="m-canvas"></canvas>
+<div id="lockdown"><h1>SYSTEM WARNING</h1><p>WRONG FINGERPRINT DETECTED</p></div>
 
-<div class="window" style="top: 50px; left: 450px; width: 350px;">
-    <div class="header"><span>[TARGET_SEARCH_v4]</span></div>
+<div class="window" style="top: 50px; left: 350px; width: 380px;">
+    <div class="header"><span>DATABASE_QUERY_V8</span></div>
     <div class="content">
-        <input type="file" id="img-upload" accept="image/*" style="font-size: 0.6rem;">
-        <input type="text" id="name-in" placeholder="Enter Target Name...">
-        <button onclick="runDiagnostic()">EXECUTE DEEP SCAN</button>
-        <div id="result-box">
+        <div id="search-ui">
+            <input type="text" id="in-name" placeholder="FULL NAME">
+            <input type="text" id="in-coll" placeholder="COLLEGE">
+            <input type="text" id="in-grad" placeholder="GRADE">
+            <input type="text" id="in-sect" placeholder="SECTION">
+            <button onclick="runDiagnostic()">EXECUTE SEARCH</button>
+        </div>
+        <div id="result-view" style="display:none;">
             <img id="p-img" src="">
-            <div id="p-details" style="margin-top:10px;"></div>
+            <div id="p-details"></div>
+            <button onclick="resetSearch()" style="background: #333; color: #0f0;">NEW SEARCH</button>
         </div>
     </div>
 </div>
 
-<div class="window" style="top: 20px; left: 20px; width: 400px; height: 250px;">
-    <div class="header"><span>[ROOT_DECRYPTOR]</span></div>
-    <div class="content" id="term-out" style="color: #0f0; white-space: pre-wrap;">Press keys to inject packets...</div>
+<div class="window" style="top: 20px; left: 20px; width: 300px; height: 250px;">
+    <div class="header"><span>ROOT_DECRYPTOR</span></div>
+    <div class="content" id="term-out" style="color: #0f0; font-size: 0.75rem;">Press any key to sniff packets...</div>
 </div>
 
-<div class="window" style="bottom: 50px; left: 20px; width: 380px;">
-    <div class="header"><span>[LIVE_TRAFFIC_INTERCEPT]</span></div>
-    <div class="content" id="traffic-log" style="font-size: 0.7rem; color: #0a0;">
-        > Initializing sniffer...<br>
-        > Listening on Port 8080...<br>
-    </div>
+<div class="window" style="bottom: 50px; left: 20px; width: 300px;">
+    <div class="header"><span>IP_TRACKER</span></div>
+    <div class="content" id="traffic-log" style="font-size: 0.7rem; color: #0a0;"></div>
 </div>
 
-<div class="window" style="top: 150px; right: 50px; width: 280px;">
-    <div class="header"><span>[HOST_RESOURCES]</span></div>
+<div class="window" style="top: 100px; right: 50px; width: 300px;">
+    <div class="header"><span>OPERATOR_INFO</span></div>
     <div class="content">
-        CPU USAGE <div class="stat-bar"><div class="stat-fill" style="width: 78%;"></div></div>
-        UPLINK STABILITY <div class="stat-bar"><div class="stat-fill" style="width: 92%; background: cyan;"></div></div>
-        BIO-SCAN STATUS: <span style="color: yellow;">READY</span><br><br>
-        <div style="font-size: 0.7rem;">
-            LOCATION: 27.7172° N, 85.3240° E<br>
-            NODE: Cosmic_Intl_Grade11
-        </div>
+        <div class="intel-line"><b>HOST:</b> Dipesh Kharel</div>
+        <div class="intel-line"><b>CLASS:</b> Bio-M (Grade 11)</div>
+        <div class="intel-line"><b>STATUS:</b> Root Admin</div>
+        <br>
+        <span style="color:yellow; font-size: 0.7rem;">[PENDING TARGETS]</span><br>
+        - Chandan Jaiswal<br>
+        - Bisuddha Adhikari
     </div>
 </div>
 
 <script>
-    // --- DATABASE ---
+    // --- DATABASE: Hardcode your GitHub image paths here ---
     const DB = [
-        { name: "Chandan Jaiswal", coll: "Cosmic International Academy", gr: "11", sec: "Bio-M", extra: "Status: Active Monitor" },
-        // Enhanced Database Object
         { 
-            name: "Chandan Jaiswal", 
-            coll: "Cosmic International Academy", 
-            gr: "11", 
-            sec: "Bio-M", 
-            details: "ID: 992-X | Status: Active",
-            family: {
-                "Note": "Data expansion required for this target."
-            }
+            name: "Chandan Jaiswal", coll: "Cosmic international academy", 
+            grad: "11", sect: "bio-M",
+            image: "chandan.jpg", // Make sure this file is in your GitHub repo
+            extra: "Status: Active | Node: Grade 11 Lab" 
         },
         { 
-            name: "Bisuddha Adhikari", 
-            coll: "Cosmic International Academy", 
-            gr: "11", 
-            sec: "Bio-M", 
-            details: "ID: 441-Y | Status: Stealth",
-            family: {
-                "Sister": "Jigyasha Adhikari",
-                "Mother": "Laxmi Ghimire",
-                "Father": "Maheshwor Adhikari",
-                "Patrilineal_Record": "UN Peacekeeping Service (Maheshwor A.)"
-            }
+            name: "Bisuddha Adhikari", coll: "cosmic international academy", 
+            grad: "11", sect: "bio-M",
+            image: "bisuddha.jpg", // Make sure this file is in your GitHub repo
+            extra: "Father: Maheshwor (UN Peacekeeping) | Mother: Laxmi | Sister: Jigyasha" 
         }
     ];
 
-    function runScan() {
-        const name = document.getElementById('name-in').value.trim().toLowerCase();
-        const p = DB.find(x => x.name.toLowerCase() === name);
-        const img = document.getElementById('p-img');
-        const detailsBox = document.getElementById('p-details');
-        
-        if(p) {
-            img.src = uploadedImg || "https://via.placeholder.com/200/002200/00FF00?text=DATA_LOCKED";
-            img.style.display = "block";
-            
-            // Build the basic profile
-            let html = `
-                <span style="color:white">NAME:</span> ${p.name}<br>
-                <span style="color:white">INSTITUTE:</span> ${p.coll}<br>
-                <span style="color:white">CLASS:</span> ${p.gr}-${p.sec}<br>
-                <hr style="border:0; border-top:1px solid var(--dim);">
-                <span style="color:yellow; font-weight:bold;">[FAMILY_RECORDS]</span><br>
-            `;
+    function runDiagnostic() {
+        const n = document.getElementById('in-name').value.trim();
+        const c = document.getElementById('in-coll').value.trim();
+        const g = document.getElementById('in-grad').value.trim();
+        const s = document.getElementById('in-sect').value.trim();
 
-            // Loop through family details dynamically
-            for (let [key, value] of Object.entries(p.family)) {
-                html += `<span style="font-size:0.75rem;">> ${key.replace('_', ' ')}: ${value}</span><br>`;
-            }
-            
-            detailsBox.innerHTML = html;
+        const p = DB.find(x => 
+            x.name.toLowerCase() === n.toLowerCase() && 
+            x.coll.toLowerCase() === c.toLowerCase() &&
+            x.grad === g && 
+            x.sect.toLowerCase() === s.toLowerCase()
+        );
+
+        if(p) {
+            document.getElementById('search-ui').style.display = 'none';
+            document.getElementById('result-view').style.display = 'block';
+            const imgEl = document.getElementById('p-img');
+            imgEl.src = p.image;
+            imgEl.style.display = "block";
+            document.getElementById('p-details').innerHTML = `
+                <div class="intel-line"><b>NAME:</b> ${p.name}</div>
+                <div class="intel-line"><b>INSTITUTE:</b> ${p.coll}</div>
+                <div class="intel-line"><b>METADATA:</b> ${p.extra}</div>
+            `;
         } else {
             const lock = document.getElementById('lockdown');
             lock.style.display = "block";
             setTimeout(() => { lock.style.display = "none"; }, 3000);
         }
     }
-    ];
 
-    let uploadedImg = "";
-    document.getElementById('img-upload').onchange = (e) => {
-        const r = new FileReader();
-        r.onload = () => { uploadedImg = r.result; };
-        r.readAsDataURL(e.target.files[0]);
-    };
-
-    function runDiagnostic() {
-        const val = document.getElementById('name-in').value.trim().toLowerCase();
-        const p = DB.find(x => x.name.toLowerCase() === val);
-        const imgEl = document.getElementById('p-img');
-        
-        if(p) {
-            imgEl.src = uploadedImg || "https://via.placeholder.com/200/002200/00FF00?text=DATA_FOUND";
-            imgEl.style.display = "block";
-            document.getElementById('p-details').innerHTML = `
-                <b>NAME:</b> ${p.name}<br>
-                <b>ACADEMY:</b> ${p.coll}<br>
-                <b>CLASS:</b> ${p.gr}-${p.sec}<br>
-                <span style="color:yellow">${p.extra}</span>
-            `;
-        } else {
-            document.getElementById('lockdown').style.display = "block";
-            setTimeout(() => { document.getElementById('lockdown').style.display = "none"; }, 2500);
-        }
+    function resetSearch() {
+        document.getElementById('search-ui').style.display = 'block';
+        document.getElementById('result-view').style.display = 'none';
     }
 
-    // --- AUTOMATION ---
+    // --- VISUAL EFFECTS ---
     // Matrix Rain
-    const c = document.getElementById('canvas');
-    const ctx = c.getContext('2d');
-    c.width = window.innerWidth; c.height = window.innerHeight;
-    const drops = Array(Math.floor(c.width/18)).fill(1);
-    setInterval(() => {
-        ctx.fillStyle = "rgba(0,0,0,0.1)"; ctx.fillRect(0,0,c.width,c.height);
+    const canvas = document.getElementById('m-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const drops = Array(Math.floor(canvas.width/18)).fill(1);
+    function draw() {
+        ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle = "#0f0"; ctx.font = "15px monospace";
         drops.forEach((y, i) => {
-            ctx.fillText(Math.random() > 0.5 ? "1" : "0", i*18, y*18);
-            if(y*18 > c.height && Math.random() > 0.98) drops[i] = 0;
+            ctx.fillText(Math.floor(Math.random()*2), i*18, y*18);
+            if(y*18 > canvas.height && Math.random() > 0.98) drops[i] = 0;
             drops[i]++;
         });
-    }, 50);
+    }
+    setInterval(draw, 50);
 
-    // Typing Logic
-    const code = "BYPASS_CORE_FIREWALL...\nAUTHORIZING_BIOMETRICS...\nFETCHING_GRADE11_LIST...\nSUCCESS: CONNECTION_ESTABLISHED\n";
+    // Auto-Typing Simulation
+    const codeSnippet = "BYPASSING_BIO_M_RECORDS...\nACCESSING_COSMIC_SERVER...\nDECRYPTING_TARGET_METADATA...\n";
     let ci = 0;
     document.onkeydown = () => {
         const out = document.getElementById('term-out');
         if(ci === 0) out.innerHTML = "";
-        out.innerHTML += code[ci % code.length];
+        out.innerHTML += codeSnippet[ci % codeSnippet.length];
         ci++;
         out.scrollTop = out.scrollHeight;
     };
 
-    // Fake Traffic Log
+    // Traffic Log
     setInterval(() => {
         const log = document.getElementById('traffic-log');
-        const ips = ["192.168.1.1", "10.0.0.5", "172.16.0.22", "8.8.8.8"];
-        const msg = ["> Handshake successful", "> Packet intercepted", "> Encryption: AES-256", "> Ping 22ms"];
-        log.innerHTML += `> ${ips[Math.floor(Math.random()*4)]} ${msg[Math.floor(Math.random()*4)]}<br>`;
-        if(log.innerHTML.length > 500) log.innerHTML = "> Refreshing Stream...<br>";
+        log.innerHTML += `> Ping 192.168.1.${Math.floor(Math.random()*255)}: OK<br>`;
+        if(log.innerHTML.length > 300) log.innerHTML = "";
         log.scrollTop = log.scrollHeight;
-    }, 2000);
+    }, 2500);
 
-    // Draggable Logic
+    // Draggable Functionality
     document.querySelectorAll('.header').forEach(h => {
         h.onmousedown = (e) => {
-            let w = h.parentElement;
-            let ox = e.clientX - w.offsetLeft, oy = e.clientY - w.offsetTop;
-            document.onmousemove = (e) => { w.style.left = e.clientX - ox + 'px'; w.style.top = e.clientY - oy + 'px'; };
+            let win = h.parentElement;
+            win.style.zIndex = 1000;
+            let ox = e.clientX - win.offsetLeft, oy = e.clientY - win.offsetTop;
+            document.onmousemove = (e) => { 
+                win.style.left = e.clientX - ox + 'px'; 
+                win.style.top = e.clientY - oy + 'px'; 
+            };
             document.onmouseup = () => document.onmousemove = null;
         };
     });
